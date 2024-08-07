@@ -1,18 +1,27 @@
 package main
 
 import (
+	"log"
+	"net/http"
 	"provaSuficiencia/config"
 	"provaSuficiencia/models"
 	"provaSuficiencia/routes"
+
+	"github.com/rs/cors"
 )
 
 func main() {
-	// primeiro de tudo faz a conexão com o banco
+	// Conectar ao banco de dados
 	config.ConnectDatabase()
-	config.DB.AutoMigrate(&models.Aluno{})
 
-	// depois inicia o servido
+	err := config.DB.AutoMigrate(&models.Aluno{})
+	if err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
+
+	// iniciar o servidor
 	r := routes.SetupRouter()
-	//na porta 8080
-	r.Run(":8080")
+
+	handler := cors.Default().Handler(r)
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
